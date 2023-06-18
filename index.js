@@ -16,7 +16,9 @@ const sword = "SW";
 const _void = ".";
 const passage  = "#";
 
-let keyDownAllow = true;
+let hero;
+let enemies_arr = [];
+
 
 const audios = {
     swordSwing: new Audio("./audio/sword_swing.mp3"),
@@ -24,6 +26,10 @@ const audios = {
     death: new Audio("./audio/death2.mp3"),
     hit:new Audio("./audio/hit.mp3"),
 };
+
+let keyDownAllow = true;
+
+
 
 
 function initializeMap() {
@@ -54,24 +60,7 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-/*
-function placeRooms(minRooms, maxRooms, minWidth, maxWidth, minHeight, maxHeight) {
-    const roomCount = getRandomInt(minRooms, maxRooms);
 
-    for (let i = 0; i < roomCount; i++) {
-        const roomWidth = getRandomInt(minWidth, maxWidth);
-        const roomHeight = getRandomInt(minHeight, maxHeight);
-        const startX = getRandomInt(0, mapWidth - roomWidth - 1);
-        const startY = getRandomInt(0, mapHeight - roomHeight - 1);
-
-        for (let y = startY; y < startY + roomHeight; y++) {
-            for (let x = startX; x < startX + roomWidth; x++) {
-                map[y][x] = "."; 
-            }
-        }
-    }
-}
-*/
 function placeRooms(minRooms, maxRooms, minWidth, maxWidth, minHeight, maxHeight) {
     const roomCount = getRandomInt(minRooms, maxRooms);
 
@@ -208,8 +197,13 @@ function placeHero() {
         const y = getRandomInt(0, mapHeight - 1);
 
         if (map[y][x] === _void) {
+
             map[y][x] = player;
+
+            hero = new Player(x,y,100,25);
+
             heroPlaced = true;
+
         }
     }
 }
@@ -224,6 +218,8 @@ function placeEnemies(count) {
 
         if (map[y][x] === _void) {
             map[y][x] = enemy;
+
+            enemies_arr.push();
             enemiesPlaced++;
         }
     }
@@ -237,48 +233,7 @@ function isCellValid(x, y) {
 }
 
 
-function moveHero(key) {
-    if(!keyDownAllow){
-        return;
-    }
 
-    const heroPosition = findEntity(player);
-    let newX = heroPosition.x;
-    let newY = heroPosition.y;
-
-    switch (key) {
-        case "w": 
-            newY -= 1;
-            break;
-        case "s": 
-            newY += 1;
-            break;
-        case "a": 
-            newX -= 1;
-            break;
-        case "d": 
-            newX += 1;
-            break;
-        default:
-            return;
-    }
-
-    if (isCellValid(newX, newY)) {
-        const entity = map[newY][newX];
-        if (entity === _void) {
-            map[heroPosition.y][heroPosition.x] = _void;
-            map[newY][newX] = player;
-        } else if (entity === sword) {
-            map[heroPosition.y][heroPosition.x] = _void;
-            map[newY][newX] = player;
-            increaseHeroAttack();
-        } else if (entity === healtPotion) {
-            map[heroPosition.y][heroPosition.x] = _void;
-            map[newY][newX] = player;
-            healHero();
-        }
-    }
-}
 
 function findEntity(entity) {
     for (let y = 0; y < mapHeight; y++) {
@@ -292,13 +247,7 @@ function findEntity(entity) {
 }
 
 
-function increaseHeroAttack() {
 
-}
-
-
-function healHero() {
-}
 
 function moveEnemiesRandomly() {
     const enemies = findEntities(enemy);
@@ -318,6 +267,7 @@ function moveEnemiesRandomly() {
         }
     });
 }
+
 function findEntities(entity){
     entities = [];
     for (let y = 0; y < mapHeight; y++) {
@@ -329,22 +279,8 @@ function findEntities(entity){
     }
     return entities;
 }
-//??
-function getAdjacentCells(entity) {
-    x = entity.x;
-    y = entity.y;
-    const adjacentCells = [
-        { x: x, y: y - 1 }, 
-        { x: x, y: y + 1 },
-        { x: x - 1, y: y }, 
-        { x: x + 1, y: y }, 
-        { x: x - 1, y: y - 1 }, 
-        { x: x + 1, y: y + 1 },
-        { x: x - 1, y: y + 1 }, 
-        { x: x + 1, y: y - 1}, 
-    ];
-    return adjacentCells;
-}
+
+
 
 function enemyAttack(enemy) {
     adjacentCells = getAdjacentCells(enemy);
@@ -356,23 +292,7 @@ function enemyAttack(enemy) {
     });
 }
 
-function heroAttack(key) {
-    if(key!=" "){
-        return;
-    }
-    hero = findEntity(player);
 
-    adjacentCells = getAdjacentCells(hero);
-    adjacentCells.forEach((cell) => {
-        const entity = map[cell.y][cell.x];
-        if (entity === enemy) {
-            map[cell.y][cell.x] = _void;
-        }
-    });
-
-    audios.swordSwing.currentTime = 0;
-    audios.swordSwing.play();
-}
 
 function renderMap() {
     const field = document.querySelector(".field");
@@ -415,7 +335,21 @@ function renderMap() {
         }
     }
 }
-
+function getAdjacentCells(entity) {
+    x = entity.x;
+    y = entity.y;
+    const adjacentCells = [
+        { x: x, y: y - 1 }, 
+        { x: x, y: y + 1 },
+        { x: x - 1, y: y }, 
+        { x: x + 1, y: y }, 
+        { x: x - 1, y: y - 1 }, 
+        { x: x + 1, y: y + 1 },
+        { x: x - 1, y: y + 1 }, 
+        { x: x + 1, y: y - 1}, 
+    ];
+    return adjacentCells;
+}
 function startGame(fps) {
 
     initializeMap();
@@ -427,13 +361,13 @@ function startGame(fps) {
     placeHero();
     placeEnemies(10);
 
-    debugMap();
     renderMap();
 
-    document.addEventListener("keydown",(key)=>{moveHero(key.key);keyDownAllow = false;},false);
+
+    document.addEventListener("keydown",(key)=>{hero.move(key.key);keyDownAllow = false;},false);
     document.addEventListener("keyup",()=>{keyDownAllow = true},false);
 
-    document.addEventListener("keydown",(key)=>{heroAttack(key.key);keyDownAllow = false;},false);
+    document.addEventListener("keydown",(key)=>{hero.attack(key.key);keyDownAllow = false;},false);
     document.addEventListener("keyup",()=>{keyDownAllow = true},false);
 
     let interval = Math.floor(200);
@@ -455,16 +389,167 @@ class Room{
     }
 }
 class Entity{
-    constructor(hp, damage){
+    constructor(x,y,hp, damage){
+        this.x = x;
+        this.y = y;
         this.hp = hp;
         this.damage = damage;
+    }
+    setCoords(x,y){
+        this.x = x;
+        this.y = y;
+    }
+
+    onHit(damage){
+        this.hp-= damage;
+        if(this.hp<=0){
+            this.die();
+        }
+
+        audios.hit.currentTime = 0;
+        audios.hit.play();
+
+    }
+    die(){
+        map[this.y][this.x] = _void;
+        audios.death.play();
+    }
+
+    getAdjacentCells() {
+        x = this.x;
+        y = this.y;
+        const adjacentCells = [
+            { x: x, y: y - 1 }, 
+            { x: x, y: y + 1 },
+            { x: x - 1, y: y }, 
+            { x: x + 1, y: y }, 
+            { x: x - 1, y: y - 1 }, 
+            { x: x + 1, y: y + 1 },
+            { x: x - 1, y: y + 1 }, 
+            { x: x + 1, y: y - 1}, 
+        ];
+        return adjacentCells;
+    }
+    isCellValid(x, y) {
+        return x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
     }
 }
 
 class Player extends Entity{
-    constructor(...args){
-        super(...args);
+    constructor(x,y,hp, damage){
+        super(x,y,hp, damage);
     }
+
+    attack(key) {
+
+        if(key!=" " && !keyDownAllow){
+            return;
+        }
+
+        let adjacentCells = super.getAdjacentCells();
+        adjacentCells.forEach((cell) => {
+            const entity = map[cell.y][cell.x];
+            if (entity === enemy) {
+                map[cell.y][cell.x] = _void;
+            }
+        });
+    
+        audios.swordSwing.currentTime = 0;
+        audios.swordSwing.play();
+    }
+
+    move(key) {
+        if(!keyDownAllow){
+            return;
+        }
+        let newX = this.x;
+        let newY = this.y;
+
+        switch (key) {
+            case "w": 
+                newY -= 1;
+                break;
+            case "s":
+                newY += 1;
+                break;
+            case "a":
+                newX -= 1;
+                break;
+            case "d":
+                newX += 1;
+                break;
+            default:
+                return;
+        }
+
+        if (super.isCellValid(newX, newY)) {
+            const entity = map[newY][newX];
+            
+            if (entity === _void) {
+                map[this.y][this.x] = _void;
+                map[newY][newX] = player;
+                super.setCoords(newX,newY);
+
+            } else if (entity === sword) {
+                map[this.y][this.x] = _void;
+                map[newY][newX] = player;
+                increaseHeroAttack();
+                super.setCoords(newX,newY);
+
+            } else if (entity === healtPotion) {
+                map[this.y][this.x] = _void;
+                map[newY][newX] = player;
+                healHero();
+                super.setCoords(newX,newY);
+            }
+        }
+    }
+
+    increaseAttack() {
+        this.damage+=25;
+    }
+    heal() {
+        this.hp+=50;
+    }
+
+}
+
+class Enemy extends Entity{
+    constructor(x,y,hp, damage){
+        super(x,y,hp, damage);
+    }
+    attack() {
+        adjacentCells = super.getAdjacentCells();
+        adjacentCells.forEach((cell) => {
+            const entity = map[cell.y][cell.x];
+            if (entity === player) {
+
+                //map[cell.y][cell.x] = _void;
+                hero.hp-= this.damage;
+            }
+        });
+    }
+    move(){
+        const newX = getRandomInt(-1, 1);
+        const newY = getRandomInt(-1, 1);
+
+        if (super.isCellValid(this.x + newX, this.y + newY)) {
+
+            const entity = map[this.y + newY][this.x + newX];
+
+            if (entity === _void) {
+
+                map[this.y][this.x] = _void;
+                map[this.y + newY][this.x + newX] = enemy;
+
+            } else if (entity === player) {
+
+                this.attack(this.x + newX, this.y + newY);
+
+            }
+        }
+    }
+
 }
 class Game{
     init(){
