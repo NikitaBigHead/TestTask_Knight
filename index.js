@@ -1,5 +1,5 @@
-const tileWidth = 30;
-const tileHeight = 30;
+const tileWidth = 26;
+const tileHeight = 26;
 const mapWidth = 40;
 const mapHeight = 24;
 const map = [];
@@ -264,6 +264,7 @@ function renderMap() {
                     break;
                 case enemy:
                     tile.classList.add("tileE");
+                    tile.appendChild(_hp);
                     break;
                 case player:
                     tile.classList.add("tileP");
@@ -438,7 +439,6 @@ class Player extends Entity{
         }
         let newX = this.x;
         let newY = this.y;
-
         switch (key) {
             case "w": 
                 newY -= 1;
@@ -498,7 +498,7 @@ class Enemy extends Entity{
             const entity = map[cell.y][cell.x].entity;
             if (entity === player) {
                 map[cell.y][cell.x].classEntity.onHit(this.damage);
-                console.log(map[cell.y][cell.x].classEntity.hp);
+
             }
         });
     }
