@@ -16,44 +16,36 @@ const sword = "SW";
 const _void = ".";
 const passage  = "#";
 
-let hero;
-let enemies_arr = [];
-
 
 const audios = {
     swordSwing: new Audio("./audio/sword_swing.mp3"),
     swordHit:new Audio("./audio/sword_hit.mp3"),
     death: new Audio("./audio/death2.mp3"),
     hit:new Audio("./audio/hit.mp3"),
+    gotEnergy: new Audio("./audio/got_energy.mp3"),
+    gotHeal:new Audio("./audio/got_heal.mp3"),
+};
+
+
+const musics = { 
+    fight: new Audio("./audio/fight.mp3"),
+    fail: new Audio("./audio/fail.mp3")
 };
 
 let keyDownAllow = true;
-
-
 
 
 function initializeMap() {
     for (let y = 0; y < mapHeight; y++) {
         const row = [];
         for (let x = 0; x < mapWidth; x++) {
-            row.push(wall); 
+            row.push({entity:wall,classEntity:null}); 
         }
         map.push(row);
     }
 }
 
-function debugMap() {
-    s = "";
-    for (let y = 0; y < mapHeight; y++) {
-        const row = [];
-        for (let x = 0; x < mapWidth; x++) {
-            s+= map[y][x];
-        }
-        console.log(s);
-        s = "";
-        map.push(row);
-    }
-}
+
 
 
 function getRandomInt(min, max) {
@@ -79,7 +71,6 @@ function placeRooms(minRooms, maxRooms, minWidth, maxWidth, minHeight, maxHeight
         } while (roomOverlaps(roomX, roomY, roomWidth, roomHeight) && attempts < maxAttempts);
 
         if (attempts === maxAttempts) {
-            // Reached maximum attempts, skip placing this room
             continue;
         }
 
@@ -87,7 +78,7 @@ function placeRooms(minRooms, maxRooms, minWidth, maxWidth, minHeight, maxHeight
 
         for (let y = roomY; y < roomY + roomHeight; y++) {
             for (let x = roomX; x < roomX + roomWidth; x++) {
-                map[y][x] = _void;
+                map[y][x].entity = _void;
             }
         }
     }
@@ -100,7 +91,7 @@ function roomOverlaps(roomX, roomY, roomWidth, roomHeight) {
                 return true;
             }
 
-            if (map[y][x] === _void ){
+            if (map[y][x].entity === _void ){
                 return true;
             }
         }
@@ -132,13 +123,13 @@ function placePassages(minPassages, maxPassages) {
 }
 function fillPassage(coord,dir){
     if(dir === "horiz" ){
-        for(x = 0;x <map[0].length;x++){
-            map[coord][x] = passage;
+        for(let x = 0;x <map[0].length;x++){
+            map[coord][x].entity = passage;
         }
     }
     else if(dir ==="vert"){
-        for(y = 0;y<map.length;y++){
-            map[y][coord] = passage;
+        for(let y = 0;y<map.length;y++){
+            map[y][coord].entity = passage;
         }
     }
 }
@@ -148,13 +139,13 @@ function checkCountPassages(room,maxPassages){
 
     count = 0
 
-    for(y = room.y; y < room.y + height;y++){
-        if(map[y][0] === passage){
+    for(let y = room.y; y < room.y + height;y++){
+        if(map[y][0].entity === passage){
             count++;
         }
     }
-    for(x = room.x + 1; x < room.x + width - 1; x++){
-        if(map[0][x] === passage){
+    for(let x = room.x + 1; x < room.x + width - 1; x++){
+        if(map[0][x].entity === passage){
             count++;
         }
     }
@@ -168,12 +159,13 @@ function checkCountPassages(room,maxPassages){
 function fillVoidPassages(){
     for (let y = 0; y < mapHeight; y++) {
         for (let x = 0; x < mapWidth; x++) {
-            if(map[y][x] === passage){
-                map[y][x] = _void;
+            if(map[y][x].entity === passage){
+                map[y][x].entity = _void;
             }
         }
     }
 }
+
 function placeItems(item, count) {
     let itemsPlaced = 0;
 
@@ -181,13 +173,12 @@ function placeItems(item, count) {
         const x = getRandomInt(0, mapWidth - 1);
         const y = getRandomInt(0, mapHeight - 1);
 
-        if (map[y][x] === _void) {
-            map[y][x] = item;
+        if (map[y][x].entity === _void) {
+            map[y][x].entity = item;
             itemsPlaced++;
         }
     }
 }
-
 
 function placeHero() {
     let heroPlaced = false;
@@ -196,11 +187,12 @@ function placeHero() {
         const x = getRandomInt(0, mapWidth - 1);
         const y = getRandomInt(0, mapHeight - 1);
 
-        if (map[y][x] === _void) {
+        if (map[y][x].entity === _void) {
 
-            map[y][x] = player;
+            map[y][x].entity = player;
 
-            hero = new Player(x,y,100,25);
+            map[y][x].classEntity = new Player(x,y,100,25);
+            map[y][x].classEntity.setListeners()
 
             heroPlaced = true;
 
@@ -216,82 +208,34 @@ function placeEnemies(count) {
         const x = getRandomInt(0, mapWidth - 1);
         const y = getRandomInt(0, mapHeight - 1);
 
-        if (map[y][x] === _void) {
-            map[y][x] = enemy;
+        if (map[y][x].entity === _void) {
+            map[y][x].entity = enemy;
 
-            enemies_arr.push();
+             map[y][x].classEntity = new Enemy(x,y,100, 5);
             enemiesPlaced++;
         }
     }
 }
 
-
-
-
-function isCellValid(x, y) {
-    return x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
-}
-
-
-
-
-function findEntity(entity) {
-    for (let y = 0; y < mapHeight; y++) {
-        for (let x = 0; x < mapWidth; x++) {
-            if (map[y][x] === entity) {
-                return { x, y };
-            }
-        }
-    }
-    return null;
-}
-
-
-
-
 function moveEnemiesRandomly() {
     const enemies = findEntities(enemy);
-
     enemies.forEach((_enemy) => {
-        const newX = getRandomInt(-1, 1);
-        const newY = getRandomInt(-1, 1);
-
-        if (isCellValid(_enemy.x + newX, _enemy.y + newY)) {
-            const entity = map[_enemy.y + newY][_enemy.x + newX];
-            if (entity === _void) {
-                map[_enemy.y][_enemy.x] = _void;
-                map[_enemy.y + newY][_enemy.x + newX] = enemy;
-            } else if (entity === player) {
-                enemyAttack(_enemy.x + newX, _enemy.y + newY);
-            }
-        }
+        _enemy.classEntity.move();
     });
+
 }
 
 function findEntities(entity){
     entities = [];
     for (let y = 0; y < mapHeight; y++) {
         for (let x = 0; x < mapWidth; x++) {
-            if (map[y][x] === entity) {
-                entities.push ({ x, y });
+            if (map[y][x].entity === entity) {
+                entities.push (map[y][x]);
             }
         }
     }
     return entities;
 }
-
-
-
-function enemyAttack(enemy) {
-    adjacentCells = getAdjacentCells(enemy);
-    adjacentCells.forEach((cell) => {
-        const entity = map[cell.y][cell.x];
-        if (entity === player) {
-            map[cell.y][cell.x] = _void;
-        }
-    });
-}
-
 
 
 function renderMap() {
@@ -305,7 +249,16 @@ function renderMap() {
             tile.classList.add("tile");
             tile.style.left = `${x * tileWidth}px`;
             tile.style.top = `${y * tileHeight}px`;
-            switch (map[y][x]) {
+
+            let _hp; 
+            try{
+                _hp = document.createElement("div");
+                _hp.classList.add("health");
+                _hp.style.width = map[y][x].classEntity.hp + "%";
+            }
+            catch(e){}
+
+            switch (map[y][x].entity) {
                 case wall:
                     tile.classList.add("tileW");
                     break;
@@ -314,6 +267,7 @@ function renderMap() {
                     break;
                 case player:
                     tile.classList.add("tileP");
+                    tile.appendChild(_hp);
                     break;
                 case healtPotion:
                     tile.classList.add("tileHP");
@@ -335,21 +289,7 @@ function renderMap() {
         }
     }
 }
-function getAdjacentCells(entity) {
-    x = entity.x;
-    y = entity.y;
-    const adjacentCells = [
-        { x: x, y: y - 1 }, 
-        { x: x, y: y + 1 },
-        { x: x - 1, y: y }, 
-        { x: x + 1, y: y }, 
-        { x: x - 1, y: y - 1 }, 
-        { x: x + 1, y: y + 1 },
-        { x: x - 1, y: y + 1 }, 
-        { x: x + 1, y: y - 1}, 
-    ];
-    return adjacentCells;
-}
+
 function startGame(fps) {
 
     initializeMap();
@@ -363,15 +303,11 @@ function startGame(fps) {
 
     renderMap();
 
-
-    document.addEventListener("keydown",(key)=>{hero.move(key.key);keyDownAllow = false;},false);
-    document.addEventListener("keyup",()=>{keyDownAllow = true},false);
-
-    document.addEventListener("keydown",(key)=>{hero.attack(key.key);keyDownAllow = false;},false);
-    document.addEventListener("keyup",()=>{keyDownAllow = true},false);
-
     let interval = Math.floor(200);
     setInterval(()=>{moveEnemiesRandomly()},interval)
+
+    document.addEventListener("keydown",()=>{musics.fight.play();}, true);
+    
 
 }
 
@@ -389,6 +325,8 @@ class Room{
     }
 }
 class Entity{
+    x = 0; 
+    y = 0; 
     constructor(x,y,hp, damage){
         this.x = x;
         this.y = y;
@@ -411,13 +349,15 @@ class Entity{
 
     }
     die(){
-        map[this.y][this.x] = _void;
+        map[this.y][this.x].entity = _void;
+        map[this.y][this.x].classEntity = null;
         audios.death.play();
     }
 
     getAdjacentCells() {
-        x = this.x;
-        y = this.y;
+        let x = this.x;
+        let y = this.y;
+
         const adjacentCells = [
             { x: x, y: y - 1 }, 
             { x: x, y: y + 1 },
@@ -433,6 +373,13 @@ class Entity{
     isCellValid(x, y) {
         return x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
     }
+    cellReplacement(entity,newX,newY){
+        map[this.y][this.x].entity = _void;
+        map[newY][newX].entity = entity;
+
+        map[this.y][this.x].classEntity = null;
+        map[newY][newX].classEntity = this;
+    }
 }
 
 class Player extends Entity{
@@ -440,6 +387,13 @@ class Player extends Entity{
         super(x,y,hp, damage);
     }
 
+    setListeners(){
+        document.addEventListener("keydown",(key)=>{this.move(key.key);keyDownAllow = false;},false);
+        document.addEventListener("keyup",()=>{keyDownAllow = true},false);
+    
+        document.addEventListener("keydown",(key)=>{this.attack(key.key);keyDownAllow = false;},false);
+        document.addEventListener("keyup",()=>{keyDownAllow = true},false);
+    }
     attack(key) {
 
         if(key!=" " && !keyDownAllow){
@@ -448,14 +402,34 @@ class Player extends Entity{
 
         let adjacentCells = super.getAdjacentCells();
         adjacentCells.forEach((cell) => {
-            const entity = map[cell.y][cell.x];
+            const entity = map[cell.y][cell.x].entity;
             if (entity === enemy) {
-                map[cell.y][cell.x] = _void;
+
+                map[cell.y][cell.x].classEntity.onHit(this.damage);
+                audios.hit.currentTime = 0;
+                audios.hit.play();
+
             }
         });
     
         audios.swordSwing.currentTime = 0;
         audios.swordSwing.play();
+    }
+
+    increaseAttack() {
+        this.damage+= 25;
+        console.log(this.damage);
+    }
+    heal() {
+        this.hp+= 50;
+        if(this.hp>=100){
+            this.hp = 100;
+        }
+    }
+    die(){
+        super.die();
+        musics.fight.pause();
+        musics.fail.play();
     }
 
     move(key) {
@@ -483,34 +457,34 @@ class Player extends Entity{
         }
 
         if (super.isCellValid(newX, newY)) {
-            const entity = map[newY][newX];
+            const entity = map[newY][newX].entity;
             
             if (entity === _void) {
-                map[this.y][this.x] = _void;
-                map[newY][newX] = player;
+
+                super.cellReplacement(player,newX,newY);
                 super.setCoords(newX,newY);
 
             } else if (entity === sword) {
-                map[this.y][this.x] = _void;
-                map[newY][newX] = player;
-                increaseHeroAttack();
+
+                this.increaseAttack();
+                super.cellReplacement(player,newX,newY);
                 super.setCoords(newX,newY);
 
+                audios.gotEnergy.currentTime = 0;
+                audios.gotEnergy.play();
+
             } else if (entity === healtPotion) {
-                map[this.y][this.x] = _void;
-                map[newY][newX] = player;
-                healHero();
+
+                this.heal();
+                super.cellReplacement(player,newX,newY);
                 super.setCoords(newX,newY);
+
+                audios.gotHeal.currentTime = 0;
+                audios.gotHeal.play();
             }
         }
     }
 
-    increaseAttack() {
-        this.damage+=25;
-    }
-    heal() {
-        this.hp+=50;
-    }
 
 }
 
@@ -519,33 +493,30 @@ class Enemy extends Entity{
         super(x,y,hp, damage);
     }
     attack() {
-        adjacentCells = super.getAdjacentCells();
+        let adjacentCells = super.getAdjacentCells();
         adjacentCells.forEach((cell) => {
-            const entity = map[cell.y][cell.x];
+            const entity = map[cell.y][cell.x].entity;
             if (entity === player) {
-
-                //map[cell.y][cell.x] = _void;
-                hero.hp-= this.damage;
+                map[cell.y][cell.x].classEntity.onHit(this.damage);
+                console.log(map[cell.y][cell.x].classEntity.hp);
             }
         });
     }
     move(){
-        const newX = getRandomInt(-1, 1);
-        const newY = getRandomInt(-1, 1);
+        const newX = this.x + getRandomInt(-1, 1);
+        const newY = this.y + getRandomInt(-1, 1);
 
-        if (super.isCellValid(this.x + newX, this.y + newY)) {
-
-            const entity = map[this.y + newY][this.x + newX];
-
+        if (super.isCellValid(newX, newY)) {
+            const entity = map[newY][newX].entity;
             if (entity === _void) {
 
-                map[this.y][this.x] = _void;
-                map[this.y + newY][this.x + newX] = enemy;
+                super.cellReplacement(enemy,newX, newY);
+                super.setCoords(newX, newY);
+
 
             } else if (entity === player) {
 
-                this.attack(this.x + newX, this.y + newY);
-
+                this.attack();
             }
         }
     }
@@ -554,10 +525,7 @@ class Enemy extends Entity{
 class Game{
     init(){
         let fps = 60;
-
         let interval = Math.floor( 1000/fps);
-        console.log(interval);
-
         startGame(fps);
 
         setInterval(() => {
