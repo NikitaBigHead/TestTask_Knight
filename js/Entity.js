@@ -1,6 +1,8 @@
 class Entity{
     x = 0; 
     y = 0; 
+    hp = 0;
+    damage = 0;
     constructor(x,y,hp, damage){
         this.x = x;
         this.y = y;

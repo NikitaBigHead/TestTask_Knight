@@ -8,7 +8,7 @@ class Player extends Entity{
     }
 
     setListeners(){
-        document.addEventListener("keydown",(key)=>{this.move(key.code);keyDownAllow = false;console.log(key)},false);
+        document.addEventListener("keydown",(key)=>{this.move(key.code);keyDownAllow = false;},false);
         document.addEventListener("keyup",()=>{keyDownAllow = true},false);
     
         document.addEventListener("keydown",(key)=>{this.attack(key.code);keyDownAllow = false;},false);

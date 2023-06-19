@@ -44,7 +44,9 @@ function placeEnemies(count) {
         if (map[y][x].entity === _void) {
             map[y][x].entity = enemy;
 
-             map[y][x].classEntity = new Enemy(x,y,enemyHP, enemyDamage);
+            let hero = findEntities(player);
+             map[y][x].classEntity = 
+            new Enemy(x,y,enemyHP, enemyDamage,enemyViewingRadius,hero[0].classEntity);
             enemiesPlaced++;
         }
     }
